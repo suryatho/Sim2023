@@ -18,6 +18,7 @@ public class SwerveDrive extends SubsystemBase {
 
     private final SwerveModule[] modules = new SwerveModule[4];
     private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
+    private Twist2d currentTwist = new Twist2d();
     private Pose2d odometryPose = new Pose2d();
     private double[] prevWheelDistances = {0.0, 0.0, 0.0, 0.0};
 
@@ -83,8 +84,8 @@ public class SwerveDrive extends SubsystemBase {
                     modules[i].getDriveDistanceMeters() - prevWheelDistances[i], modules[i].getSteerAngle());
             prevWheelDistances[i] = modules[i].getDriveDistanceMeters();
         }
-        Twist2d twist = kinematics.toTwist2d(deltas);
-        odometryPose = odometryPose.exp(twist);
+        currentTwist = kinematics.toTwist2d(deltas);
+        odometryPose = odometryPose.exp(currentTwist);
 
         Logger.getInstance().recordOutput("Odometry/Robot", getOdometryPose());
     }
@@ -128,6 +129,9 @@ public class SwerveDrive extends SubsystemBase {
 
     public Pose2d getOdometryPose() {
         return odometryPose;
+    }
+    public Twist2d getCurrentTwist() {
+        return currentTwist;
     }
 
     public void resetOdometry(Pose2d pose) {

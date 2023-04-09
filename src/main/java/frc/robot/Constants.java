@@ -5,6 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -37,13 +39,16 @@ public final class Constants {
         REPLAY
     }
 
-    public static final double ROBOT_WIDTH = 0.7;
-    public static final double ROBOT_LENGTH = 0.7;
+    public static final double bumperThickness = Units.inchesToMeters(5.0);
+    public static final double robotWidth = Units.inchesToMeters(26.0);
+    public static final double robotLength = Units.inchesToMeters(26.0);
+    public static final double neoFreeSpeedRPM = 5676.0;
+
+    public static final ShuffleboardTab driverTab = Shuffleboard.getTab("Driver");
 
     public static class DriveConstants {
-        public static final double trackwidth = Units.inchesToMeters(26.0);
-        public static final double wheelbase = Units.inchesToMeters(26.0);
-
+        public static final double trackwidth = Units.inchesToMeters(24.0);
+        public static final double wheelbase = Units.inchesToMeters(24.0);
 
         public static final double wheelRadius = 0.10033 / 2.0;
         public static final double driveReduction = (14.0 / 50.0) * (28.0 / 16.0) * (15.0 / 45.0);
@@ -53,5 +58,16 @@ public final class Constants {
                 driveReduction * wheelRadius * 2.0 * Math.PI;
         public static final double maxAngularSpeed = maxLinearSpeed /
                 Math.hypot(trackwidth / 2.0, wheelbase / 2.0);
+    }
+
+    public static class ArmConstants {
+        public static final double gearRatio = 1.0 / 200.0;
+        public static final double maxJointSpeedRadiansPerSecond = (neoFreeSpeedRPM / 60.0) * (gearRatio) *
+                (2 * Math.PI);
+
+        public static final double minAlphaAngle = Math.PI / 6.0;
+        public static final double maxAlphaAngle = (110.0 / 360.0) * 2 * Math.PI;
+        public static final double minBetaAngle = -Math.PI / 30.0;
+        public static final double maxBetaAngle = (-150.0 / 360.0) * 2 * Math.PI;
     }
 }

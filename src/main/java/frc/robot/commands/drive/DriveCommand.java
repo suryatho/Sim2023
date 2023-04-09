@@ -68,6 +68,9 @@ public class DriveCommand extends CommandBase {
         txLimiter.reset(txSupp.getAsDouble());
         tyLimiter.reset(tySupp.getAsDouble());
         omegaLimiter.reset(omegaSupp.getAsDouble());
+
+        double dRadians = drive.getCurrentTwist().dtheta;
+        rotController.reset(robotAngleSupplier.getAsDouble(), dRadians);
     }
 
     @Override
@@ -100,12 +103,17 @@ public class DriveCommand extends CommandBase {
         drive.poutDrive(x, y, omega, fieldRelative.getAsBoolean());
     }
 
+    @Override
+    public void end(boolean interrupted) {
+        useSetpointRotMode = false;
+    }
+
     public CommandBase setSetpoint(SetpointDirection setpointDirection) {
         return new InstantCommand(() -> {
             rotController.setGoal(setpointDirection.getAngle());
-            rotController.reset(robotAngleSupplier.getAsDouble());
+            rotController.reset(robotAngleSupplier.getAsDouble(), drive.getCurrentTwist().dtheta);
             useSetpointRotMode = true;
-        });
+        }).handleInterrupt(() -> useSetpointRotMode = false);
     }
 
     public enum SetpointDirection {

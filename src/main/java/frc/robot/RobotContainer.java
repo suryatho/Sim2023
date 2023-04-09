@@ -12,7 +12,9 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.drive.DriveCommand;
+import frc.robot.commands.drive.DriveToPose;
 import frc.robot.commands.drive.TrajectoryFollowingCommand;
+import frc.robot.subsystems.NodeSelector;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.drive.SwerveModuleIO;
 import frc.robot.subsystems.drive.SwerveModuleIOSim;
@@ -29,6 +31,7 @@ import frc.robot.utils.StormXboxController;
 public class RobotContainer {
 
     private SwerveDrive drive;
+    private NodeSelector nodeSelector;
 
     private final StormXboxController driver = new StormXboxController(0);
 
@@ -63,6 +66,8 @@ public class RobotContainer {
                     new SwerveModuleIO() {}
             );
 
+        nodeSelector = new NodeSelector();
+
         // Configure the button bindings
         configureButtonBindings();
     }
@@ -89,6 +94,13 @@ public class RobotContainer {
         driver.b().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.RIGHT));
 
         drive.setDefaultCommand(driveCommand);
+
+        driver.povUp().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.DOWN));
+        driver.povDown().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.UP));
+        driver.povRight().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.RIGHT));
+        driver.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
+
+        driver.leftTrigger().whileTrue(new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition));
     }
 
     /**
