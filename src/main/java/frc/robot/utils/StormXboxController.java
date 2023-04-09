@@ -6,7 +6,7 @@ import static edu.wpi.first.math.MathUtil.applyDeadband;
 
 public class StormXboxController extends CommandXboxController {
 
-    private static final double deadZone = 0.12;
+    private static final double deadZone = 0.2;
 
     /**
      * Construct an instance of a controller.
@@ -24,6 +24,7 @@ public class StormXboxController extends CommandXboxController {
 
     @Override
     public double getLeftY() {
+        
         return applyDeadband(super.getLeftY(), deadZone);
     }
 

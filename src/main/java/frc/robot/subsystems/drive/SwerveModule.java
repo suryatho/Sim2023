@@ -14,7 +14,7 @@ public class SwerveModule {
     private final int id;
     private final SwerveModuleIOInputsAutoLogged inputs = new SwerveModuleIOInputsAutoLogged();
 
-    private final SimpleMotorFeedforward driveFF = new SimpleMotorFeedforward(0.09, 0.15);
+    private final SimpleMotorFeedforward driveFF = new SimpleMotorFeedforward(0.001, 0.15);
     private final PIDController driveVelController = new PIDController(0.9, 0.0, 0.0, Constants.loopPeriodSecs);
     private final PIDController steerController = new PIDController(23.0, 0.0, 0.0, Constants.loopPeriodSecs);
 
@@ -51,7 +51,7 @@ public class SwerveModule {
     }
 
     public Rotation2d getSteerAngle() {
-        return new Rotation2d(MathUtil.inputModulus(inputs.steerPositionRad, -Math.PI, Math.PI));
+        return new Rotation2d(MathUtil.angleModulus(inputs.steerPositionRad));
     }
 
     public SwerveModuleState getState() {

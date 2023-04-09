@@ -11,10 +11,14 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.commands.drive.DriveCommand;
 import frc.robot.commands.drive.DriveToPose;
 import frc.robot.commands.drive.TrajectoryFollowingCommand;
 import frc.robot.subsystems.NodeSelector;
+import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.arm.ArmJointIO;
+import frc.robot.subsystems.arm.ArmJointIOSim;
 import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.subsystems.drive.SwerveModuleIO;
 import frc.robot.subsystems.drive.SwerveModuleIOSim;
@@ -31,6 +35,7 @@ import frc.robot.utils.StormXboxController;
 public class RobotContainer {
 
     private SwerveDrive drive;
+    private Arm arm;
     private NodeSelector nodeSelector;
 
     private final StormXboxController driver = new StormXboxController(0);
@@ -51,6 +56,9 @@ public class RobotContainer {
                         new SwerveModuleIOSim(),
                         new SwerveModuleIOSim(),
                         new SwerveModuleIOSim());
+                arm = new Arm(
+                        new ArmJointIOSim(),
+                        new ArmJointIOSim());
                 break;
 
             // Replayed robot, disable IO implementations
@@ -65,6 +73,11 @@ public class RobotContainer {
                     new SwerveModuleIO() {},
                     new SwerveModuleIO() {}
             );
+
+        if (arm == null)
+            arm = new Arm(
+                    new ArmJointIO() {},
+                    new ArmJointIO() {});
 
         nodeSelector = new NodeSelector();
 
@@ -101,6 +114,12 @@ public class RobotContainer {
         driver.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
 
         driver.leftTrigger().whileTrue(new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition));
+
+//        arm.setDefaultCommand(
+//                new RunCommand(
+//                        () -> arm.poutMoveEnd(driver.getLeftX(), -driver.getLeftY()),
+//                        arm)
+//        );
     }
 
     /**

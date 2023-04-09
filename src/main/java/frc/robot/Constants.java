@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import frc.robot.subsystems.arm.ArmJointConfig;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -61,13 +64,51 @@ public final class Constants {
     }
 
     public static class ArmConstants {
-        public static final double gearRatio = 1.0 / 200.0;
-        public static final double maxJointSpeedRadiansPerSecond = (neoFreeSpeedRPM / 60.0) * (gearRatio) *
-                (2 * Math.PI);
+        public static final double a1Length = 0.902;
+        public static final double a2Length = 0.889;
 
+        // B.S.
+        public static final double a1Kg = 9.97;
+        public static final double a2Kg = 9.7;
+
+        public static final double shoulderOffsetRadians = 3.799277345;
+        public static final double elbowOffsetRadians = 4.878652344;
+
+        public static final double shoulderGearRatio = 205.0;
+        public static final double elbowGearRatio = 205.0;
+
+        public static final double shoulderMaxSpeed = (85.0 / 360.0) * 2 * Math.PI;
+
+        public static final double elbowMaxSpeed = shoulderMaxSpeed;
+
+//        public static final double minAlphaAngle = -Math.PI;
+//        public static final double maxAlphaAngle = Math.PI;
+//        public static final double minBetaAngle = -Math.PI;
+//        public static final double maxBetaAngle = Math.PI;
         public static final double minAlphaAngle = Math.PI / 6.0;
-        public static final double maxAlphaAngle = (110.0 / 360.0) * 2 * Math.PI;
-        public static final double minBetaAngle = -Math.PI / 30.0;
-        public static final double maxBetaAngle = (-150.0 / 360.0) * 2 * Math.PI;
+        public static final double maxAlphaAngle = (100.0 / 360.0) * 2 * Math.PI;
+        public static final double maxBetaAngle = -Math.PI / 30.0;
+        public static final double minBetaAngle = (-170.0 / 360.0) * 2 * Math.PI;
+
+        public static final ArmJointConfig shoulderConfig = new ArmJointConfig(
+                shoulderOffsetRadians,
+                shoulderMaxSpeed,
+                a1Length,
+                minAlphaAngle,
+                maxAlphaAngle,
+                a1Kg,
+                shoulderGearRatio);
+
+        public static final ArmJointConfig elbowConfig = new ArmJointConfig(
+                elbowOffsetRadians,
+                elbowMaxSpeed,
+                a2Length,
+                minBetaAngle,
+                maxBetaAngle,
+                a2Kg,
+                elbowGearRatio);
+
+        public static final Translation3d armOrigin3d = new Translation3d(Units.inchesToMeters(5.0), 0.0, Units.inchesToMeters(9.0));
+        public static final Translation2d armOrigin2dArmSpace = new Translation2d(Units.inchesToMeters(5.0), Units.inchesToMeters(9.0));
     }
 }
