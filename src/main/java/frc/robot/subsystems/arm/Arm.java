@@ -3,8 +3,8 @@ package frc.robot.subsystems.arm;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.utils.DoubleJointedArm.DoubleJointedArmKinematics;
-import frc.robot.utils.DoubleJointedArm.DoubleJointedArmSpeeds;
+import frc.robot.utils.doubleJointedArm.DoubleJointedArmKinematics;
+import frc.robot.utils.doubleJointedArm.DoubleJointedArmSpeeds;
 import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.Constants.ArmConstants.*;

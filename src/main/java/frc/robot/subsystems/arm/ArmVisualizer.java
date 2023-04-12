@@ -18,7 +18,7 @@ public class ArmVisualizer {
 
     public ArmVisualizer() {
         mechanism = new Mechanism2d(2.5, 2, new Color8Bit(Color.kGainsboro));
-        MechanismRoot2d mechanismRoot = mechanism.getRoot("Origin", armOrigin2dArmSpace.getX() + 0.4, armOrigin2dArmSpace.getY());
+        MechanismRoot2d mechanismRoot = mechanism.getRoot("Origin", armOrigin2dArmSpace.getX() + 2.5/2.0, armOrigin2dArmSpace.getY());
         shoulderLigament = mechanismRoot.append(
                 new MechanismLigament2d("Shoulder", a1Length, Units.radiansToDegrees(maxAlphaAngle)));
         elbowLigament = shoulderLigament.append(

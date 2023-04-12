@@ -77,18 +77,17 @@ public final class Constants {
         public static final double shoulderGearRatio = 205.0;
         public static final double elbowGearRatio = 205.0;
 
-        public static final double shoulderMaxSpeed = (85.0 / 360.0) * 2 * Math.PI;
-
-        public static final double elbowMaxSpeed = shoulderMaxSpeed;
+        public static final double shoulderMaxSpeed = (90.0 / 360.0) * 2 * Math.PI;
+        public static final double elbowMaxSpeed = shoulderMaxSpeed * 0.9;
 
 //        public static final double minAlphaAngle = -Math.PI;
 //        public static final double maxAlphaAngle = Math.PI;
 //        public static final double minBetaAngle = -Math.PI;
 //        public static final double maxBetaAngle = Math.PI;
         public static final double minAlphaAngle = Math.PI / 6.0;
-        public static final double maxAlphaAngle = (100.0 / 360.0) * 2 * Math.PI;
+        public static final double maxAlphaAngle = (120.0 / 360.0) * 2 * Math.PI;
         public static final double maxBetaAngle = -Math.PI / 30.0;
-        public static final double minBetaAngle = (-170.0 / 360.0) * 2 * Math.PI;
+        public static final double minBetaAngle = (-165.0 / 360.0) * 2 * Math.PI;
 
         public static final ArmJointConfig shoulderConfig = new ArmJointConfig(
                 shoulderOffsetRadians,

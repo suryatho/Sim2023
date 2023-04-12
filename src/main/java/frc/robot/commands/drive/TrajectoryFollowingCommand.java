@@ -51,6 +51,7 @@ public class TrajectoryFollowingCommand extends CommandBase {
                 trajectory.getStates().stream().map(s -> {
                             PathPlannerState state = (PathPlannerState) s;
                             return new Pose2d(state.poseMeters.getTranslation(), state.holonomicRotation);
+                            
                         }).toArray(Pose2d[]::new));
     }
 
@@ -60,7 +61,7 @@ public class TrajectoryFollowingCommand extends CommandBase {
         Pose2d setpoint = new Pose2d(setpointState.poseMeters.getTranslation(), setpointState.holonomicRotation);
         Logger.getInstance().recordOutput("TrajectoryFollowing/Setpoint", setpoint);
 
-        Pose2d currentPose = drive.getOdometryPose();
+        Pose2d currentPose = drive.getPose();
         Logger.getInstance().recordOutput("TrajectoryFollowing/Robot", currentPose);
         ChassisSpeeds speeds = drive.getDriveController().calculate(currentPose, setpointState);
         System.out.println(speeds);

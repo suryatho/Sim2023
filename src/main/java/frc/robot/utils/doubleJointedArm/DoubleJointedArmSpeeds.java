@@ -1,4 +1,4 @@
-package frc.robot.utils.DoubleJointedArm;
+package frc.robot.utils.doubleJointedArm;
 
 import static java.lang.Math.*;
 

@@ -23,7 +23,7 @@ public class DriveCommand extends CommandBase {
     private DoubleSupplier robotAngleSupplier;
     private ProfiledPIDController rotController = new ProfiledPIDController(
             1.0 / Math.PI, 0.0, 0.0,
-            new TrapezoidProfile.Constraints(8 * Math.PI, 6 * Math.PI));
+            new TrapezoidProfile.Constraints(4 * Math.PI, 6 * Math.PI));
 
     private boolean useSetpointRotMode = false;
 
@@ -50,7 +50,7 @@ public class DriveCommand extends CommandBase {
         this.fieldRelative = fieldRelative;
         this.turbo = turbo;
 
-        this.robotAngleSupplier = () -> drive.getOdometryPose().getRotation().getRadians();
+        this.robotAngleSupplier = () -> drive.getPose().getRotation().getRadians();
 
         rotController.enableContinuousInput(-Math.PI, Math.PI);
         rotController.setTolerance((0.5 / 360.0) * 2 * Math.PI);
@@ -69,8 +69,9 @@ public class DriveCommand extends CommandBase {
         tyLimiter.reset(tySupp.getAsDouble());
         omegaLimiter.reset(omegaSupp.getAsDouble());
 
-        double dRadians = drive.getCurrentTwist().dtheta;
+        double dRadians = drive.getCurrentVel().dtheta;
         rotController.reset(robotAngleSupplier.getAsDouble(), dRadians);
+        System.out.println("DriveCommand initialize()");
     }
 
     @Override
@@ -111,9 +112,9 @@ public class DriveCommand extends CommandBase {
     public CommandBase setSetpoint(SetpointDirection setpointDirection) {
         return new InstantCommand(() -> {
             rotController.setGoal(setpointDirection.getAngle());
-            rotController.reset(robotAngleSupplier.getAsDouble(), drive.getCurrentTwist().dtheta);
+            rotController.reset(robotAngleSupplier.getAsDouble(), drive.getCurrentVel().dtheta);
             useSetpointRotMode = true;
-        }).handleInterrupt(() -> useSetpointRotMode = false);
+        });
     }
 
     public enum SetpointDirection {

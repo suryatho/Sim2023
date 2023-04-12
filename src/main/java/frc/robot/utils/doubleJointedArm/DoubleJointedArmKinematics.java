@@ -1,4 +1,4 @@
-package frc.robot.utils.DoubleJointedArm;
+package frc.robot.utils.doubleJointedArm;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;

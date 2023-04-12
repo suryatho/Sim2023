@@ -52,6 +52,8 @@ public class DriveToPose extends CommandBase {
         rotController.setTolerance(0.015);
 
         rotController.enableContinuousInput(-Math.PI, Math.PI);
+
+        addRequirements(drive);
     }
 
     public DriveToPose(SwerveDrive drive, Supplier<Pose2d> goalSupplier) {
@@ -73,11 +75,13 @@ public class DriveToPose extends CommandBase {
         yController.setGoal(goalPose.getY());
         rotController.setGoal(goalPose.getRotation().getRadians());
 
-        Pose2d currentPose = drive.getOdometryPose();
-        Twist2d currentVel = drive.getCurrentTwist();
-        xController.reset(currentPose.getX(), currentVel.dx);
-        yController.reset(currentPose.getY(), currentVel.dy);
-        rotController.reset(currentPose.getRotation().getRadians(), currentVel.dtheta);
+        Pose2d currentPose = drive.getPose();
+        Twist2d currentVel = drive.getCurrentVel();
+        xController.reset(currentPose.getX(), -currentVel.dx / 2.0);
+        yController.reset(currentPose.getY(), -currentVel.dy / 2.0);
+        rotController.reset(currentPose.getRotation().getRadians(), -currentVel.dtheta / 2.0);
+
+        System.out.println("DriveToPose initialize()");
     }
 
     @Override
@@ -89,7 +93,7 @@ public class DriveToPose extends CommandBase {
             rotController.setGoal(goalPose.getRotation().getRadians());
         }
 
-        Pose2d currentPose = drive.getOdometryPose();
+        Pose2d currentPose = drive.getPose();
 
         double vx = xController.calculate(currentPose.getX());
         double vy = yController.calculate(currentPose.getY());
@@ -100,8 +104,7 @@ public class DriveToPose extends CommandBase {
 
     @Override
     public boolean isFinished() {
-//        return (xController.atGoal() && yController.atGoal() && rotController.atGoal());
-        return false;
+       return (xController.atGoal() && yController.atGoal() && rotController.atGoal());
     }
 
     @Override

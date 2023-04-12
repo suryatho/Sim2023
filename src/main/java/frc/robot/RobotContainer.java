@@ -7,10 +7,12 @@ package frc.robot;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.commands.drive.DriveCommand;
 import frc.robot.commands.drive.DriveToPose;
@@ -68,16 +70,22 @@ public class RobotContainer {
 
         if (drive == null)
             drive = new SwerveDrive(
-                    new SwerveModuleIO() {},
-                    new SwerveModuleIO() {},
-                    new SwerveModuleIO() {},
-                    new SwerveModuleIO() {}
+                    new SwerveModuleIO() {
+                    },
+                    new SwerveModuleIO() {
+                    },
+                    new SwerveModuleIO() {
+                    },
+                    new SwerveModuleIO() {
+                    }
             );
 
         if (arm == null)
             arm = new Arm(
-                    new ArmJointIO() {},
-                    new ArmJointIO() {});
+                    new ArmJointIO() {
+                    },
+                    new ArmJointIO() {
+                    });
 
         nodeSelector = new NodeSelector();
 
@@ -92,6 +100,7 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
+        // default drive command stuff
         DriveCommand driveCommand = new DriveCommand(
                 drive,
                 () -> -driver.getLeftY(),
@@ -105,21 +114,38 @@ public class RobotContainer {
         driver.x().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.LEFT));
         driver.a().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.BACKWARD));
         driver.b().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.RIGHT));
-
+        // schedule drive command
         drive.setDefaultCommand(driveCommand);
 
+        // node selector ui
         driver.povUp().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.DOWN));
         driver.povDown().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.UP));
         driver.povRight().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.RIGHT));
         driver.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
 
-        driver.leftTrigger().whileTrue(new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition));
+        // drive to node
+        driver.leftTrigger().whileTrue(
+                new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition) {
+                    // never finish
+                    @Override
+                    public boolean isFinished() {
+                        return false;
+                    }
 
-//        arm.setDefaultCommand(
-//                new RunCommand(
-//                        () -> arm.poutMoveEnd(driver.getLeftX(), -driver.getLeftY()),
-//                        arm)
-//        );
+                    // nothing on end
+                    @Override
+                    public void end(boolean interrupted) {}
+                }
+        );
+
+        // reset pose
+        driver.start().onTrue(new InstantCommand(() -> drive.resetPose(new Pose2d())));
+
+        arm.setDefaultCommand(
+                new RunCommand(
+                        () -> arm.poutMoveEnd(driver.getLeftX(), -driver.getLeftY()),
+                        arm)
+        );
     }
 
     /**
@@ -130,9 +156,9 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         PathPlannerTrajectory trajectory = PathPlanner.loadPath("New Path", new PathConstraints(4, 3));
         if (DriverStation.getAlliance() == DriverStation.Alliance.Red)
-            drive.resetOdometry(FlipUtil.apply(trajectory.getInitialHolonomicPose()));
+            drive.resetPose(FlipUtil.apply(trajectory.getInitialHolonomicPose()));
         else
-            drive.resetOdometry(trajectory.getInitialHolonomicPose());
+            drive.resetPose(trajectory.getInitialHolonomicPose());
         return new TrajectoryFollowingCommand(drive, trajectory, true);
     }
 }

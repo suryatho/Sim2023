@@ -6,8 +6,8 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import frc.robot.Constants;
 
 public class SwerveModuleIOSim implements SwerveModuleIO {
-    private FlywheelSim drive = new FlywheelSim(DCMotor.getNEO(1), 6.75, 0.025);
-    private FlywheelSim steer = new FlywheelSim(DCMotor.getNEO(1), 150.0 / 7.0, 0.004);
+    private final FlywheelSim drive = new FlywheelSim(DCMotor.getNEO(1), 6.75, 0.025);
+    private final FlywheelSim steer = new FlywheelSim(DCMotor.getNEO(1), 150.0 / 7.0, 0.004);
 
     @Override
     public void updateInputs(SwerveModuleIOInputs inputs) {
