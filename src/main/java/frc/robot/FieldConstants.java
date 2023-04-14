@@ -29,7 +29,7 @@ public final class FieldConstants {
 
         static {
             double alignedX = Units.inchesToMeters(54.0) +
-                    (Constants.robotLength + Constants.bumperThickness) / 2.0;
+                    (Constants.robotLength) / 2.0 + Constants.bumperThickness;
             for (int col = 0; col <= 8; col++) {
                 // get type of node
                 boolean isCube = col == 1 || col == 4 || col == 7;

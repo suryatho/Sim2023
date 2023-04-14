@@ -9,30 +9,47 @@ import frc.robot.subsystems.drive.SwerveDrive;
 import frc.robot.utils.FlipUtil;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.function.Supplier;
+
 import static com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 
-public class TrajectoryFollowingCommand extends CommandBase {
+public class DriveTrajectory extends CommandBase {
 
     private final SwerveDrive drive;
     private PathPlannerTrajectory trajectory = new PathPlannerTrajectory();
+    private Supplier<PathPlannerTrajectory> trajectorySupplier;
     private boolean useFlipForAlliance = false;
 
     private Timer timer = new Timer();
 
-    public TrajectoryFollowingCommand(SwerveDrive drive, PathPlannerTrajectory trajectory, boolean useFlipForAlliance) {
+    public DriveTrajectory(SwerveDrive drive,
+                           Supplier<PathPlannerTrajectory> trajectorySupplier,
+                           boolean useFlipForAlliance) {
         this.drive = drive;
-        this.trajectory = trajectory;
-        this.useFlipForAlliance = useFlipForAlliance;
+        setTrajectory(trajectorySupplier);
+        setUseFlipForAlliance(useFlipForAlliance);
+    }
+
+    public DriveTrajectory(SwerveDrive drive,
+                           PathPlannerTrajectory trajectory,
+                           boolean useFlipForAlliance) {
+        this.drive = drive;
+        setTrajectory(trajectory);
+        setUseFlipForAlliance(useFlipForAlliance);
 
         addRequirements(drive);
     }
 
-    public TrajectoryFollowingCommand(SwerveDrive drive) {
+    public DriveTrajectory(SwerveDrive drive) {
         this.drive = drive;
     }
 
-    protected void setTrajectory(PathPlannerTrajectory trajectory) {
-        this.trajectory = trajectory;
+    public void setTrajectory(Supplier<PathPlannerTrajectory> trajectorySupplier) {
+        this.trajectorySupplier = trajectorySupplier;
+    }
+
+    public void setTrajectory(PathPlannerTrajectory trajectory) {
+        trajectorySupplier = () -> trajectory;
     }
 
     protected void setUseFlipForAlliance(boolean useFlipForAlliance) {
@@ -44,6 +61,7 @@ public class TrajectoryFollowingCommand extends CommandBase {
         timer.reset();
         timer.start();
 
+        trajectory = trajectorySupplier.get();
         if (useFlipForAlliance)
             trajectory = FlipUtil.apply(trajectory);
 

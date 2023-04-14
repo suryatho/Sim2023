@@ -1,6 +1,9 @@
 package frc.robot.subsystems.arm;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.doubleJointedArm.DoubleJointedArmKinematics;
@@ -61,5 +64,13 @@ public class Arm extends SubsystemBase {
         vx = MathUtil.clamp(vx, -1.0, 1.0);
         vy = MathUtil.clamp(vy, -1.0, 1.0);
         moveEnd(vx, vy);
+    }
+
+    public Pose2d getEndPose() {
+        return kinematics.getEndPose();
+    }
+
+    public static Translation2d fromGlobalTranslation(Translation3d translation) {
+        return new Translation2d(translation.getX(), translation.getZ());
     }
 }

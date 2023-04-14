@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.commands.drive.DriveCommand;
 import frc.robot.commands.drive.DriveToPose;
-import frc.robot.commands.drive.TrajectoryFollowingCommand;
+import frc.robot.commands.drive.DriveTrajectory;
 import frc.robot.subsystems.NodeSelector;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmJointIO;
@@ -39,8 +39,6 @@ public class RobotContainer {
     private SwerveDrive drive;
     private Arm arm;
     private NodeSelector nodeSelector;
-
-    private final StormXboxController driver = new StormXboxController(0);
 
     /**
      * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -70,22 +68,16 @@ public class RobotContainer {
 
         if (drive == null)
             drive = new SwerveDrive(
-                    new SwerveModuleIO() {
-                    },
-                    new SwerveModuleIO() {
-                    },
-                    new SwerveModuleIO() {
-                    },
-                    new SwerveModuleIO() {
-                    }
+                    new SwerveModuleIO() {},
+                    new SwerveModuleIO() {},
+                    new SwerveModuleIO() {},
+                    new SwerveModuleIO() {}
             );
 
         if (arm == null)
             arm = new Arm(
-                    new ArmJointIO() {
-                    },
-                    new ArmJointIO() {
-                    });
+                    new ArmJointIO() {},
+                    new ArmJointIO() {});
 
         nodeSelector = new NodeSelector();
 
@@ -100,52 +92,48 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        // default drive command stuff
-        DriveCommand driveCommand = new DriveCommand(
-                drive,
-                () -> -driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX(),
-                () -> !driver.getHID().getRightBumper(),
-                driver::getRightTriggerAxis
-        );
+        if (Constants.useDriverController) {
+            StormXboxController driver = new StormXboxController(0);
 
-        driver.y().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.FORWARD));
-        driver.x().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.LEFT));
-        driver.a().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.BACKWARD));
-        driver.b().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.RIGHT));
-        // schedule drive command
-        drive.setDefaultCommand(driveCommand);
+            DriveCommand driveCommand = new DriveCommand(
+                    drive,
+                    () -> -driver.getLeftY(),
+                    () -> -driver.getLeftX(),
+                    () -> -driver.getRightX(),
+                    () -> !driver.getHID().getRightBumper(),
+                    driver::getRightTriggerAxis
+            );
 
-        // node selector ui
-        driver.povUp().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.DOWN));
-        driver.povDown().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.UP));
-        driver.povRight().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.RIGHT));
-        driver.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
+            driver.y().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.FORWARD));
+            driver.x().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.LEFT));
+            driver.a().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.BACKWARD));
+            driver.b().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.RIGHT));
+            // schedule drive command
+            drive.setDefaultCommand(driveCommand);
 
-        // drive to node
-        driver.leftTrigger().whileTrue(
-                new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition) {
-                    // never finish
-                    @Override
-                    public boolean isFinished() {
-                        return false;
-                    }
+            // node selector ui
+            driver.povUp().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.DOWN));
+            driver.povDown().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.UP));
+            driver.povRight().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.RIGHT));
+            driver.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
 
-                    // nothing on end
-                    @Override
-                    public void end(boolean interrupted) {}
-                }
-        );
+            driver.leftTrigger().whileTrue(
+                        new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition) {
+                            @Override
+                            public boolean isFinished() {
+                                return false;
+                            }
+                        });
 
-        // reset pose
-        driver.start().onTrue(new InstantCommand(() -> drive.resetPose(new Pose2d())));
+            // reset pose
+            driver.start().onTrue(new InstantCommand(() -> drive.resetPose(new Pose2d())));
 
-        arm.setDefaultCommand(
-                new RunCommand(
-                        () -> arm.poutMoveEnd(driver.getLeftX(), -driver.getLeftY()),
-                        arm)
-        );
+            arm.setDefaultCommand(
+                    new RunCommand(
+                            () -> arm.poutMoveEnd(driver.getLeftX() * 0.5, -driver.getLeftY() * 0.5),
+                            arm)
+            );
+        }
     }
 
     /**
@@ -159,6 +147,6 @@ public class RobotContainer {
             drive.resetPose(FlipUtil.apply(trajectory.getInitialHolonomicPose()));
         else
             drive.resetPose(trajectory.getInitialHolonomicPose());
-        return new TrajectoryFollowingCommand(drive, trajectory, true);
+        return new DriveTrajectory(drive, trajectory, true);
     }
 }

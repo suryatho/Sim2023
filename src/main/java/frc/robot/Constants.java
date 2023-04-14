@@ -42,7 +42,10 @@ public final class Constants {
         REPLAY
     }
 
-    public static final double bumperThickness = Units.inchesToMeters(5.0);
+    public static final boolean useDriverController = true;
+    public static final boolean useArmController = false;
+
+    public static final double bumperThickness = Units.inchesToMeters(4.0);
     public static final double robotWidth = Units.inchesToMeters(26.0);
     public static final double robotLength = Units.inchesToMeters(26.0);
     public static final double neoFreeSpeedRPM = 5676.0;
