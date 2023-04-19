@@ -3,10 +3,13 @@ package frc.robot.commands.drive;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.SwerveDrive;
 
 import java.util.function.BooleanSupplier;
@@ -23,15 +26,21 @@ public class DriveCommand extends CommandBase {
     private DoubleSupplier robotAngleSupplier;
     private ProfiledPIDController rotController = new ProfiledPIDController(
             1.0 / Math.PI, 0.0, 0.0,
-            new TrapezoidProfile.Constraints(4 * Math.PI, 6 * Math.PI));
+            new TrapezoidProfile.Constraints(maxRotVel, maxRotAcc));
+
+    private static double minRotVel = Constants.DriveConstants.maxAngularSpeed * 0.3;
+    private static double maxRotVel = Constants.DriveConstants.maxAngularSpeed;
+    private static double minRotAcc = Constants.DriveConstants.maxAngularSpeed * 0.6;
+    private static double maxRotAcc = Constants.DriveConstants.maxAngularSpeed * 2.3;
 
     private boolean useSetpointRotMode = false;
 
     private static final double minSpeed = 0.3;
     private double speedScale = minSpeed;
 
-    private SlewRateLimiter txLimiter = new SlewRateLimiter(3.0),
-    tyLimiter = new SlewRateLimiter(3.0), omegaLimiter = new SlewRateLimiter(3.0);
+    private SlewRateLimiter txLimiter = new SlewRateLimiter(3.5),
+            tyLimiter = new SlewRateLimiter(3.5),
+            omegaLimiter = new SlewRateLimiter(3.5);
 
     private boolean isRed = false;
 
@@ -48,7 +57,7 @@ public class DriveCommand extends CommandBase {
         this.omegaSupp = () -> signedSquare(omegaSupp.getAsDouble());;
 
         this.fieldRelative = fieldRelative;
-        this.turbo = turbo;
+        this.turbo = () -> signedSquare(turbo.getAsDouble());
 
         this.robotAngleSupplier = () -> drive.getPose().getRotation().getRadians();
 
@@ -69,8 +78,7 @@ public class DriveCommand extends CommandBase {
         tyLimiter.reset(tySupp.getAsDouble());
         omegaLimiter.reset(omegaSupp.getAsDouble());
 
-        double dRadians = drive.getCurrentVel().dtheta;
-        rotController.reset(robotAngleSupplier.getAsDouble(), dRadians);
+        rotController.reset(robotAngleSupplier.getAsDouble(), drive.getCurrentVel().omegaRadiansPerSecond);
         System.out.println("DriveCommand initialize()");
     }
 
@@ -85,9 +93,21 @@ public class DriveCommand extends CommandBase {
         if (rotController.atGoal())
             useSetpointRotMode = false;
 
-        omega = omegaLimiter.calculate(omegaSupp.getAsDouble());
-        if (useSetpointRotMode)
+        // get omega value from either controller or joystick input
+        if (useSetpointRotMode) {
+            // calculate max vel and acceleration
+            ChassisSpeeds currentVel = drive.getCurrentVel();
+            double linearVelScale = Math.hypot(currentVel.vxMetersPerSecond, currentVel.vyMetersPerSecond) / Constants.DriveConstants.maxLinearSpeed;
+            linearVelScale = speedToConstraintFunc(linearVelScale);
+
+            double maxVel = MathUtil.interpolate(maxRotVel, minRotVel, linearVelScale);
+            double maxAcc = MathUtil.interpolate(maxRotAcc, minRotAcc, linearVelScale);
+            rotController.setConstraints(new TrapezoidProfile.Constraints(maxVel, maxAcc));
+
             omega = rotController.calculate(robotAngleSupplier.getAsDouble());
+        } else
+            omega = omegaLimiter.calculate(omegaSupp.getAsDouble());
+
 
         speedScale = MathUtil.interpolate(minSpeed, 1.0, turbo.getAsDouble());
 
@@ -112,7 +132,7 @@ public class DriveCommand extends CommandBase {
     public CommandBase setSetpoint(SetpointDirection setpointDirection) {
         return new InstantCommand(() -> {
             rotController.setGoal(setpointDirection.getAngle());
-            rotController.reset(robotAngleSupplier.getAsDouble(), drive.getCurrentVel().dtheta);
+            rotController.reset(robotAngleSupplier.getAsDouble(), drive.getCurrentVel().omegaRadiansPerSecond);
             useSetpointRotMode = true;
         });
     }
@@ -130,12 +150,17 @@ public class DriveCommand extends CommandBase {
 
         public double getAngle() {
             if (DriverStation.getAlliance() == DriverStation.Alliance.Red)
-                return MathUtil.inputModulus(angle + Math.PI, -Math.PI, Math.PI);
+                return MathUtil.angleModulus(angle + Math.PI);
             return angle;
         }
     }
 
     private static double signedSquare(double value) {
         return Math.signum(value) * (value * value);
+    }
+
+    private static double speedToConstraintFunc(double value) {
+        value = MathUtil.clamp(value, 0.0, 1.0);
+        return Math.sqrt(value);
     }
 }

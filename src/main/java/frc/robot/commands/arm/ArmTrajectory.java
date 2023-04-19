@@ -5,6 +5,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.arm.Arm;
@@ -65,7 +66,7 @@ public class ArmTrajectory extends CommandBase {
         Pose2d current = arm.getEndPose();
 
         var speeds = controller.calculate(current, setpoint);
-        arm.moveEnd(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        arm.driveArm(speeds);
     }
 
     @Override
@@ -76,6 +77,11 @@ public class ArmTrajectory extends CommandBase {
 
     @Override
     public void end(boolean interrupted) {
-        arm.moveEnd(0, 0);
+        arm.driveArm(0, 0);
+    }
+
+    /** returns heading from a to b */
+    public static Rotation2d getHeading(Translation2d a, Translation2d b) {
+        return new Rotation2d(b.getX() - a.getX(), b.getY() - a.getY());
     }
 }

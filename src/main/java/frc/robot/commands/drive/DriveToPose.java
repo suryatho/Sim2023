@@ -3,6 +3,7 @@ package frc.robot.commands.drive;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
@@ -17,19 +18,18 @@ public class DriveToPose extends CommandBase {
     private ProfiledPIDController xController = new ProfiledPIDController(2.0, 0.0, 0.0,
             new TrapezoidProfile.Constraints(
                     Constants.DriveConstants.maxLinearSpeed,
-                    Constants.DriveConstants.maxLinearSpeed * 0.8),
+                    Constants.DriveConstants.maxLinearSpeed),
             Constants.loopPeriodSecs);
     private ProfiledPIDController yController = new ProfiledPIDController(2.0, 0.0, 0.0,
             new TrapezoidProfile.Constraints(
                     Constants.DriveConstants.maxLinearSpeed,
-                    Constants.DriveConstants.maxLinearSpeed * 0.8),
+                    Constants.DriveConstants.maxLinearSpeed),
             Constants.loopPeriodSecs);
 
     private ProfiledPIDController rotController = new ProfiledPIDController(Math.PI, 0, 0,
             new TrapezoidProfile.Constraints(
                     Constants.DriveConstants.maxAngularSpeed,
-                    Constants.DriveConstants.maxAngularSpeed * 0.8
-            ),
+                    Constants.DriveConstants.maxAngularSpeed),
             Constants.loopPeriodSecs);
 
     private Supplier<Pose2d> goalSupplier;
@@ -69,37 +69,24 @@ public class DriveToPose extends CommandBase {
         if (angularConstraintsSupplier != null) {
             rotController.setConstraints(angularConstraintsSupplier.get());
         }
-        // set controllers
-        goalPose = goalSupplier.get();
-        xController.setGoal(goalPose.getX());
-        yController.setGoal(goalPose.getY());
-        rotController.setGoal(goalPose.getRotation().getRadians());
 
-        Pose2d currentPose = drive.getPose();
-        Twist2d currentVel = drive.getCurrentVel();
-        xController.reset(currentPose.getX(), -currentVel.dx / 2.0);
-        yController.reset(currentPose.getY(), -currentVel.dy / 2.0);
-        rotController.reset(currentPose.getRotation().getRadians(), -currentVel.dtheta / 2.0);
+        resetControllers();
 
         System.out.println("DriveToPose initialize()");
     }
 
     @Override
     public void execute() {
-        if (!goalPose.equals(goalSupplier.get())) {
-            goalPose = goalSupplier.get();
-            xController.setGoal(goalPose.getX());
-            yController.setGoal(goalPose.getY());
-            rotController.setGoal(goalPose.getRotation().getRadians());
-        }
+        if (!goalPose.equals(goalSupplier.get()))
+            resetControllers();
 
         Pose2d currentPose = drive.getPose();
 
         double vx = xController.calculate(currentPose.getX());
         double vy = yController.calculate(currentPose.getY());
-        double vomega = rotController.calculate(currentPose.getRotation().getRadians());
+        double vtheta = rotController.calculate(currentPose.getRotation().getRadians());
 
-        drive.drive(vx, vy, vomega, true);
+        drive.drive(vx, vy, vtheta, true);
     }
 
     @Override
@@ -111,5 +98,19 @@ public class DriveToPose extends CommandBase {
     public void end(boolean interrupted) {
         if (!interrupted)
             drive.drive(0, 0, 0, false);
+    }
+
+    private void resetControllers() {
+        // set controllers
+        goalPose = goalSupplier.get();
+        xController.setGoal(goalPose.getX());
+        yController.setGoal(goalPose.getY());
+        rotController.setGoal(goalPose.getRotation().getRadians());
+
+        Pose2d currentPose = drive.getPose();
+        ChassisSpeeds currentVel = drive.getCurrentVel();
+        xController.reset(currentPose.getX(), currentVel.vxMetersPerSecond / 2.0);
+        yController.reset(currentPose.getY(), currentVel.vyMetersPerSecond / 2.0);
+        rotController.reset(currentPose.getRotation().getRadians(), currentVel.omegaRadiansPerSecond / 2.0);
     }
 }

@@ -80,9 +80,7 @@ public class DriveTrajectory extends CommandBase {
         Logger.getInstance().recordOutput("TrajectoryFollowing/Setpoint", setpoint);
 
         Pose2d currentPose = drive.getPose();
-        Logger.getInstance().recordOutput("TrajectoryFollowing/Robot", currentPose);
         ChassisSpeeds speeds = drive.getDriveController().calculate(currentPose, setpointState);
-        System.out.println(speeds);
         drive.drive(speeds);
     }
 
@@ -96,5 +94,7 @@ public class DriveTrajectory extends CommandBase {
     public void end(boolean interrupted) {
         System.out.println("Trajectory Following Command ended after " + timer.get() + " seconds");
         timer.stop();
+        timer.reset();
+        drive.stop();
     }
 }

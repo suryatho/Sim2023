@@ -11,11 +11,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.*;
+import frc.robot.commands.arm.StowArm;
 import frc.robot.commands.drive.DriveCommand;
-import frc.robot.commands.drive.DriveToPose;
+import frc.robot.commands.drive.DriveToNode;
 import frc.robot.commands.drive.DriveTrajectory;
 import frc.robot.subsystems.NodeSelector;
 import frc.robot.subsystems.arm.Arm;
@@ -92,47 +91,50 @@ public class RobotContainer {
      * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
      */
     private void configureButtonBindings() {
-        if (Constants.useDriverController) {
-            StormXboxController driver = new StormXboxController(0);
+        if (Constants.useController) {
+            StormXboxController controller = new StormXboxController(0);
 
-            DriveCommand driveCommand = new DriveCommand(
-                    drive,
-                    () -> -driver.getLeftY(),
-                    () -> -driver.getLeftX(),
-                    () -> -driver.getRightX(),
-                    () -> !driver.getHID().getRightBumper(),
-                    driver::getRightTriggerAxis
-            );
+            if (Constants.useDriverController) {
+                DriveCommand driveCommand = new DriveCommand(
+                        drive,
+                        () -> -controller.getLeftY(),
+                        () -> -controller.getLeftX(),
+                        () -> -controller.getRightX(),
+                        () -> true,
+                        controller::getRightTriggerAxis
+                );
 
-            driver.y().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.FORWARD));
-            driver.x().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.LEFT));
-            driver.a().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.BACKWARD));
-            driver.b().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.RIGHT));
-            // schedule drive command
-            drive.setDefaultCommand(driveCommand);
+                controller.y().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.FORWARD));
+                controller.x().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.LEFT));
+                controller.a().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.BACKWARD));
+                controller.b().onTrue(driveCommand.setSetpoint(DriveCommand.SetpointDirection.RIGHT));
+                // schedule drive command
+                drive.setDefaultCommand(driveCommand);
 
-            // node selector ui
-            driver.povUp().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.DOWN));
-            driver.povDown().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.UP));
-            driver.povRight().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.RIGHT));
-            driver.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
+                // node selector ui
+                controller.povUp().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.DOWN));
+                controller.povDown().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.UP));
+                controller.povRight().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.RIGHT));
+                controller.povLeft().onTrue(nodeSelector.moveSelectedCommand(NodeSelector.Direction.LEFT));
 
-            driver.leftTrigger().whileTrue(
-                        new DriveToPose(drive, () -> nodeSelector.getSelectedNode().scoringPosition) {
-                            @Override
-                            public boolean isFinished() {
-                                return false;
-                            }
-                        });
+                // drive to node
+                controller.leftTrigger().whileTrue(Commands.repeatingSequence(
+                        Commands.deadline(
+                                new WaitUntilCommand(nodeSelector::isNodeColChanged),
+                                new DriveToNode(drive, nodeSelector::getSelectedNode)
+                        )));
 
-            // reset pose
-            driver.start().onTrue(new InstantCommand(() -> drive.resetPose(new Pose2d())));
+                // reset pose
+                controller.start().onTrue(new InstantCommand(() -> drive.resetPose(new Pose2d())));
 
-            arm.setDefaultCommand(
-                    new RunCommand(
-                            () -> arm.poutMoveEnd(driver.getLeftX() * 0.5, -driver.getLeftY() * 0.5),
-                            arm)
-            );
+                controller.leftBumper().onTrue(new StowArm(arm));
+            }
+
+            if (Constants.useArmController) {
+                arm.setDefaultCommand(
+                        new RunCommand(() -> arm.poutDriveArm(controller.getRightX(), -controller.getLeftY()))
+                );
+            }
         }
     }
 
@@ -142,7 +144,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        PathPlannerTrajectory trajectory = PathPlanner.loadPath("New Path", new PathConstraints(4, 3));
+        PathPlannerTrajectory trajectory = PathPlanner.loadPath("New Path", new PathConstraints(6, 6));
         if (DriverStation.getAlliance() == DriverStation.Alliance.Red)
             drive.resetPose(FlipUtil.apply(trajectory.getInitialHolonomicPose()));
         else

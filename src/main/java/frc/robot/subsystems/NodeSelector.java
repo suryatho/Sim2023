@@ -19,11 +19,16 @@ import java.util.Map;
 public class NodeSelector extends VirtualSubsystem {
 
     private int selectedRow = 0, selectedCol = 0;
+    private int lastSelectedRow = selectedRow, lastSelectedCol = selectedCol;
+    private boolean nodeColChanged = false;
+    private boolean nodeRowChanged = false;
+    private boolean nodeChanged = false;
 
     private final static String coneColor = Color.kYellow.toHexString();
     private final static String cubeColor = Color.kPurple.toHexString();
     private final static String hybridColor = Color.kLightGray.toHexString();
     private final static String selectedColor = Color.kLightGreen.toHexString();
+
 
     public NodeSelector() {
         // make the layout on shuffleboard
@@ -50,6 +55,35 @@ public class NodeSelector extends VirtualSubsystem {
                         .withPosition(8 - col, 2 - row);
             }
         }
+    }
+
+    @Override
+    public void periodic() {
+        if (lastSelectedCol != selectedCol) {
+            lastSelectedCol = selectedCol;
+            nodeColChanged = true;
+        } else
+            nodeColChanged = false;
+
+        if (lastSelectedRow != selectedRow) {
+            lastSelectedRow = selectedRow;
+            nodeRowChanged = true;
+        } else
+            nodeRowChanged = false;
+
+        nodeChanged = nodeColChanged || nodeRowChanged;
+    }
+
+    public boolean isNodeChanged() {
+        return nodeChanged;
+    }
+
+    public boolean isNodeColChanged() {
+        return nodeColChanged;
+    }
+
+    public boolean isNodeRowChanged() {
+        return nodeRowChanged;
     }
 
     public Node getSelectedNode() {

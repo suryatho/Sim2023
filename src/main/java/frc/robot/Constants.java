@@ -42,8 +42,9 @@ public final class Constants {
         REPLAY
     }
 
-    public static final boolean useDriverController = true;
-    public static final boolean useArmController = false;
+    public static final boolean useController = true;
+    public static final boolean useDriverController = true && useController;
+    public static final boolean useArmController = false && useController;
 
     public static final double bumperThickness = Units.inchesToMeters(4.0);
     public static final double robotWidth = Units.inchesToMeters(26.0);
@@ -53,13 +54,13 @@ public final class Constants {
     public static final ShuffleboardTab driverTab = Shuffleboard.getTab("Driver");
 
     public static class DriveConstants {
-        public static final double trackwidth = Units.inchesToMeters(24.0);
-        public static final double wheelbase = Units.inchesToMeters(24.0);
+        public static final double trackwidth = 0.65;
+        public static final double wheelbase = 0.65;
+        public static final double turnRadius = Math.hypot(trackwidth / 2.0, wheelbase / 2.0);
 
         public static final double wheelRadius = 0.10033 / 2.0;
         public static final double driveReduction = (14.0 / 50.0) * (28.0 / 16.0) * (15.0 / 45.0);
         private static final double neoFreeSpeedRPM = 5676.0;
-
         public static final double maxLinearSpeed = neoFreeSpeedRPM / 60.0 *
                 driveReduction * wheelRadius * 2.0 * Math.PI;
         public static final double maxAngularSpeed = maxLinearSpeed /
@@ -71,8 +72,8 @@ public final class Constants {
         public static final double a2Length = 0.889;
 
         // B.S.
-        public static final double a1Kg = 9.97;
-        public static final double a2Kg = 9.7;
+        public static final double a1Kg = 6.97;
+        public static final double a2Kg = 6.7;
 
         public static final double shoulderOffsetRadians = 3.799277345;
         public static final double elbowOffsetRadians = 4.878652344;
@@ -112,5 +113,7 @@ public final class Constants {
 
         public static final Translation3d armOrigin3d = new Translation3d(Units.inchesToMeters(5.0), 0.0, Units.inchesToMeters(9.0));
         public static final Translation2d armOrigin2dArmSpace = new Translation2d(Units.inchesToMeters(5.0), Units.inchesToMeters(9.0));
+
+        public static final Translation2d stowedPosition = new Translation2d(0.13, 0.25);
     }
 }

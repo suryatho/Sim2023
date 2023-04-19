@@ -15,7 +15,7 @@ public class SwerveModuleIOSim implements SwerveModuleIO {
         steer.update(Constants.loopPeriodSecs);
 
         double steerVelRadPerSec = steer.getAngularVelocityRadPerSec();
-        inputs.steerPositionRad += MathUtil.inputModulus(steerVelRadPerSec * Constants.loopPeriodSecs, -Math.PI, Math.PI);
+        inputs.steerPositionRad += MathUtil.angleModulus(steerVelRadPerSec * Constants.loopPeriodSecs);
         inputs.steerVelRadPerSec = steerVelRadPerSec;
 
         double driveVelMetersPerSec = (drive.getAngularVelocityRadPerSec() * (2 * Math.PI * Constants.DriveConstants.wheelRadius));

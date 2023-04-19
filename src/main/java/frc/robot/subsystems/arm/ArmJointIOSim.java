@@ -31,10 +31,8 @@ public class ArmJointIOSim implements ArmJointIO {
     public void setSpeed(double speed) {
         double newAngle = joint.getAngleRads() + (speed * Constants.loopPeriodSecs);
         // clamp joint angle
-        if (joint.wouldHitLowerLimit(newAngle))
-            speed = MathUtil.clamp(speed, 0, config.maxSpeed);
-        else if (joint.wouldHitUpperLimit(newAngle))
-            speed = MathUtil.clamp(speed, -config.maxSpeed, 0);
+        if (joint.wouldHitLowerLimit(newAngle) || joint.wouldHitUpperLimit(newAngle))
+            speed = 0;
         joint.setInputVoltage((speed / config.maxSpeed) * 12.0);
     }
 }
